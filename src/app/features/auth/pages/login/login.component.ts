@@ -11,8 +11,8 @@ export class LoginComponent {
   constructor(public authService: AuthService, private router: Router) {}
 
   public login(): void {
-    this.authService.login().subscribe(() => {
-      this.router.navigateByUrl('/home/admin');
+    this.authService.login('klmasdl', 'yo').subscribe(() => {
+      this.router.navigateByUrl('/app');
     });
   }
 }

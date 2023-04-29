@@ -1,3 +1,31 @@
-<p>home works!</p>
-
-<p>{{ currentTime | async | date : "full" }}</p>
+<div class="container">
+  <mat-card class="card">
+    <mat-card-header>
+      <mat-card-title> <h1>Simple Shopping List</h1> </mat-card-title>
+    </mat-card-header>
+    <mat-card-actions align="end">
+      <button mat-button extended disableRipple>
+        <mat-icon>open_in_new</mat-icon>
+        Go to app
+      </button>
+    </mat-card-actions>
+    <mat-card-content>
+      <p>Simple shopping list application, accessible on web and mobile.</p>
+      <p>TODO: Update images</p>
+      <div class="images">
+        <img
+          class="image"
+          src="/assets/img/screenshot.png"
+          alt="Screenshot of application on mobile device"
+          mat-card-image
+        />
+        <img
+          class="image"
+          src="/assets/img/screenshot_landscape.png"
+          alt="Screenshot of application"
+          mat-card-image
+        />
+      </div>
+    </mat-card-content>
+  </mat-card>
+</div>
