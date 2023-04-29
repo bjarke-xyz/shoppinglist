@@ -9,7 +9,7 @@ import { CoreModule } from './core/core.module';
   declarations: [AppComponent],
   imports: [
     // angular
-    BrowserModule,
+    BrowserModule.withServerTransition({ appId: 'serverApp' }),
 
     // core + shared
     CoreModule,

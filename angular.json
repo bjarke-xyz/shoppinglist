@@ -18,7 +18,7 @@
         "build": {
           "builder": "@angular-devkit/build-angular:browser",
           "options": {
-            "outputPath": "dist/shoppinglist-frontend",
+            "outputPath": "dist/shoppinglist-frontend/browser",
             "index": "src/index.html",
             "main": "src/main.ts",
             "polyfills": ["zone.js"],
@@ -83,6 +83,58 @@
             "styles": ["src/styles.scss"],
             "scripts": []
           }
+        },
+        "server": {
+          "builder": "@angular-devkit/build-angular:server",
+          "options": {
+            "outputPath": "dist/shoppinglist-frontend/server",
+            "main": "server.ts",
+            "tsConfig": "tsconfig.server.json",
+            "inlineStyleLanguage": "scss"
+          },
+          "configurations": {
+            "production": {
+              "outputHashing": "media"
+            },
+            "development": {
+              "optimization": false,
+              "sourceMap": true,
+              "extractLicenses": false,
+              "vendorChunk": true
+            }
+          },
+          "defaultConfiguration": "production"
+        },
+        "serve-ssr": {
+          "builder": "@nguniversal/builders:ssr-dev-server",
+          "configurations": {
+            "development": {
+              "browserTarget": "shoppinglist-frontend:build:development",
+              "serverTarget": "shoppinglist-frontend:server:development"
+            },
+            "production": {
+              "browserTarget": "shoppinglist-frontend:build:production",
+              "serverTarget": "shoppinglist-frontend:server:production"
+            }
+          },
+          "defaultConfiguration": "development"
+        },
+        "prerender": {
+          "builder": "@nguniversal/builders:prerender",
+          "options": {
+            "routes": ["/", "/home"]
+          },
+          "configurations": {
+            "production": {
+              "browserTarget": "shoppinglist-frontend:build:production",
+              "serverTarget": "shoppinglist-frontend:server:production"
+            },
+            "development": {
+              "browserTarget": "shoppinglist-frontend:build:development",
+              "serverTarget": "shoppinglist-frontend:server:development"
+            }
+          },
+          "defaultConfiguration": "production"
         }
       }
     }
