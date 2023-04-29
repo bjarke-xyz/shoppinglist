@@ -1,4 +1,5 @@
 export const environment = {
   production: true,
-  apiUrl: 'https://slv4-api.bjarke.xyz',
+  // apiUrl: 'https://sl.bjarke.xyz',
+  apiUrl: 'https://shoppinglist-api.bjarke.workers.dev',
 };

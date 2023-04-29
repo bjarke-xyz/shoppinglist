@@ -1,1 +1,26 @@
-<p>shopping-list works!</p>
+<div class="container">
+  <header>
+    <mat-toolbar>
+      <span>Min liste</span>
+      <span class="example-spacer"></span>
+      <button mat-icon-button>
+        <mat-icon>settings</mat-icon>
+      </button>
+    </mat-toolbar>
+  </header>
+  <main>
+    <router-outlet></router-outlet>
+  </main>
+  <nav class="nav">
+    <div class="nav-item">
+      <a mat-button routerLink="/app/main" title="Your active list">
+        <mat-icon>receipt_long</mat-icon>
+      </a>
+    </div>
+    <div class="nav-item">
+      <a mat-button routerLink="/app/items" title="Items">
+        <mat-icon>category</mat-icon>
+      </a>
+    </div>
+  </nav>
+</div>

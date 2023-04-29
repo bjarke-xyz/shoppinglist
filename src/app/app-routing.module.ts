@@ -1,5 +1,6 @@
 import { NgModule } from '@angular/core';
 import { RouterModule, Routes } from '@angular/router';
+import { authGuard } from './core/guard/auth.guard';
 
 const routes: Routes = [
   {
@@ -18,6 +19,7 @@ const routes: Routes = [
       import('./features/shopping-list/shopping-list.module').then(
         (m) => m.ShoppingListModule
       ),
+    canActivate: [authGuard],
   },
 ];
 

@@ -1,0 +1,33 @@
+.container {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+main {
+  flex: 1;
+  overflow: auto;
+}
+
+header {
+  background: #f88;
+}
+
+.nav {
+  background: lightblue;
+  display: flex;
+  justify-content: space-around;
+  .nav-item {
+    padding: 1rem;
+    a {
+      color: inherit;
+      mat-icon {
+        transform: scale(2);
+      }
+    }
+  }
+}
+
+.example-spacer {
+  flex: 1 1 auto;
+}
