@@ -12,6 +12,13 @@ const routes: Routes = [
     loadChildren: () =>
       import('./features/auth/auth.module').then((m) => m.AuthModule),
   },
+  {
+    path: 'app',
+    loadChildren: () =>
+      import('./features/shopping-list/shopping-list.module').then(
+        (m) => m.ShoppingListModule
+      ),
+  },
 ];
 
 @NgModule({
