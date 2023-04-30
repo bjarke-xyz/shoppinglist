@@ -1,1 +1,20 @@
-<p>items works!</p>
+<div class="create-item">
+  <form [formGroup]="form" (submit)="createItem()">
+    <mat-form-field class="example-form-field">
+      <mat-label>Create new item</mat-label>
+      <input matInput formControlName="itemName" type="text" />
+    </mat-form-field>
+  </form>
+</div>
+<div class="items">
+  <mat-card *ngFor="let item of items | async">
+    <mat-card-content>
+      <mat-card-title>
+        {{ item.name }}
+      </mat-card-title>
+    </mat-card-content>
+    <mat-card-actions [align]="'end'">
+      <button mat-button (click)="deleteItem(item)">Delete</button>
+    </mat-card-actions>
+  </mat-card>
+</div>

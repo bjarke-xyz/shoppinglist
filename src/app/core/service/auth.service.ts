@@ -1,8 +1,19 @@
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpContext } from '@angular/common/http';
 import { Injectable } from '@angular/core';
-import { Observable, catchError, delay, map, of, tap } from 'rxjs';
+import {
+  Observable,
+  catchError,
+  delay,
+  firstValueFrom,
+  map,
+  mergeMap,
+  of,
+  tap,
+  throwError,
+} from 'rxjs';
 import { environment } from '../../../environments/environment';
 import decodeJwt from 'jwt-decode';
+import { bypassInterceptor } from '../interceptor/token.interceptor';
 
 const TokenInfoKey = 'TokenInfo';
 
@@ -11,29 +22,6 @@ const TokenInfoKey = 'TokenInfo';
 })
 export class AuthService {
   constructor(private http: HttpClient) {}
-
-  isLoggedIn(): Promise<boolean> {
-    return new Promise((resolve, reject) => {
-      const token = this.decodeToken();
-      if (!token) {
-        resolve(false);
-        return;
-      }
-      const secondsSinceEpoch = Math.round(Date.now() / 1000);
-      if (secondsSinceEpoch >= token.exp) {
-        this.refreshToken().subscribe({
-          next: (success) => {
-            resolve(success);
-          },
-          error: (error) => {
-            reject(error);
-          },
-        });
-        return;
-      }
-      resolve(true);
-    });
-  }
 
   login(email: string, password: string): Observable<SignInResponse> {
     return this.http
@@ -58,9 +46,13 @@ export class AuthService {
       return of(false);
     }
     return this.http
-      .post<IdTokenResponse>(`${environment.apiUrl}/api/auth/refresh`, {
-        refreshToken: tokenPair.refreshToken,
-      })
+      .post<IdTokenResponse>(
+        `${environment.apiUrl}/api/auth/refresh`,
+        {
+          refreshToken: tokenPair.refreshToken,
+        },
+        { context: bypassInterceptor() }
+      )
       .pipe(
         map((result) => {
           const tokenPair = {
@@ -73,6 +65,23 @@ export class AuthService {
       );
   }
 
+  refreshIfNecessary(): Observable<boolean> {
+    return of(false).pipe(
+      mergeMap(() => {
+        const token = this.decodeToken();
+        if (!token) {
+          return of(false);
+        }
+        const secondsSinceEpoch = Math.round(Date.now() / 1000);
+        if (secondsSinceEpoch >= token.exp) {
+          return this.refreshToken();
+        } else {
+          return of(true);
+        }
+      })
+    );
+  }
+
   decodeToken(): TokenInfo | null {
     const tokenPair = this.getTokenPair();
     if (!tokenPair) {
@@ -80,6 +89,14 @@ export class AuthService {
     }
     const decoded = decodeJwt(tokenPair.idToken) as TokenInfo;
     return decoded;
+  }
+
+  getToken(): string | null {
+    const tokenPair = this.getTokenPair();
+    if (!tokenPair) {
+      return null;
+    }
+    return tokenPair.idToken;
   }
 
   private getTokenPair(): TokenPair | null {
@@ -91,8 +108,12 @@ export class AuthService {
     return tokenPair;
   }
 
-  private setTokenPair(tokenPair: TokenPair): void {
-    localStorage.setItem(TokenInfoKey, JSON.stringify(tokenPair));
+  private setTokenPair(tokenPair: TokenPair | null): void {
+    if (!tokenPair) {
+      localStorage.removeItem(TokenInfoKey);
+    } else {
+      localStorage.setItem(TokenInfoKey, JSON.stringify(tokenPair));
+    }
   }
 }
 

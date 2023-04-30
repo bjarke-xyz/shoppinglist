@@ -12,12 +12,19 @@ export class ToastService {
   constructor() {}
 
   public error(error: any): void {
+    const defaultConfig: MatSnackBarConfig = {
+      duration: 3000,
+    };
+    console.error(error);
     if (typeof error === 'string') {
-      this._notification$.next({ message: error });
+      this._notification$.next({ message: error, config: defaultConfig });
     } else {
       const errorMsg =
-        error?.error?.error?.message ?? error?.message ?? 'An error occured';
-      this._notification$.next({ message: errorMsg });
+        error?.error?.error?.message ??
+        error?.error?.error ??
+        error?.message ??
+        'An error occured';
+      this._notification$.next({ message: errorMsg, config: defaultConfig });
     }
   }
 }
