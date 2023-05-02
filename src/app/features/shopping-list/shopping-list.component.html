@@ -1,7 +1,12 @@
 <div class="container">
   <header>
     <mat-toolbar>
-      <span>Min liste</span>
+      <button mat-button (click)="openListPicker()">
+        <ng-container *ngIf="selectedList | async; let list; else: selectList">
+          {{ list.name }}
+        </ng-container>
+        <ng-template #selectList> Select list </ng-template>
+      </button>
       <span class="example-spacer"></span>
       <button mat-icon-button>
         <mat-icon>settings</mat-icon>

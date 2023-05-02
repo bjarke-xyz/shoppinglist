@@ -14,8 +14,16 @@ import { MatDialogModule } from '@angular/material/dialog';
 import { MatInputModule } from '@angular/material/input';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { ListPickerComponent } from './components/list-picker/list-picker.component';
+import { MatBottomSheetModule } from '@angular/material/bottom-sheet';
+import { MatMenuModule } from '@angular/material/menu';
+import { MatAutocompleteModule } from '@angular/material/autocomplete';
 @NgModule({
-  declarations: [ShoppingListComponent, MainComponent, ItemsComponent, ListPickerComponent],
+  declarations: [
+    ShoppingListComponent,
+    MainComponent,
+    ItemsComponent,
+    ListPickerComponent,
+  ],
   imports: [
     CommonModule,
     ShoppingListRoutingModule,
@@ -28,6 +36,9 @@ import { ListPickerComponent } from './components/list-picker/list-picker.compon
     MatInputModule,
     FormsModule,
     ReactiveFormsModule,
+    MatBottomSheetModule,
+    MatMenuModule,
+    MatAutocompleteModule,
   ],
 })
 export class ShoppingListModule {}

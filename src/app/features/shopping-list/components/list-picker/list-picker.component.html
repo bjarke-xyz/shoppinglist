@@ -1,1 +1,32 @@
-<p>list-picker works!</p>
+<form [formGroup]="form" (submit)="createList()" class="form">
+  <mat-form-field>
+    <mat-label>Create new list</mat-label>
+    <input matInput formControlName="listName" type="text" />
+  </mat-form-field>
+</form>
+<div class="lists">
+  <mat-list>
+    <mat-list-item *ngFor="let list of lists | async">
+      <div class="list-item-container">
+        <button
+          mat-icon-button
+          [matMenuTriggerFor]="menu"
+          aria-label="Example icon-button with a menu"
+        >
+          <mat-icon>more_vert</mat-icon>
+        </button>
+        <button mat-button (click)="selectList(list)">{{ list.name }}</button>
+        <mat-menu #menu="matMenu">
+          <button mat-menu-item>
+            <mat-icon>edit</mat-icon>
+            <span>Rename</span>
+          </button>
+          <button mat-menu-item (click)="deleteList(list)">
+            <mat-icon>delete_forever</mat-icon>
+            <span>Delete</span>
+          </button>
+        </mat-menu>
+      </div>
+    </mat-list-item>
+  </mat-list>
+</div>

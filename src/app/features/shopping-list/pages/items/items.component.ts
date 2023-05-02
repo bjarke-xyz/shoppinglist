@@ -6,17 +6,13 @@ import { ToastService } from 'src/app/shared/services/toast.service';
 import { MatDialog } from '@angular/material/dialog';
 import { FormBuilder, FormControl, FormGroup } from '@angular/forms';
 
-interface Form {
-  itemName: FormControl<string>;
-}
-
 @Component({
   selector: 'app-items',
   templateUrl: './items.component.html',
   styleUrls: ['./items.component.scss'],
 })
 export class ItemsComponent {
-  public items: Observable<Item[]>;
+  public items = this.shoppingListService.items;
   public form = this.fb.group({
     itemName: [''],
   });
@@ -26,7 +22,6 @@ export class ItemsComponent {
     private dialog: MatDialog,
     private fb: FormBuilder
   ) {
-    this.items = shoppingListService.items;
     this.shoppingListService.getItems().subscribe({
       error: (error) => {
         this.toastService.error(error);

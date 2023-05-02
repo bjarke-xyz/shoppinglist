@@ -1,1 +1,29 @@
-<p>main works!</p>
+<form class="form" (submit)="onSubmit(autocompleteControl.value)">
+  <mat-form-field class="example-full-width" appearance="fill">
+    <mat-label>Item</mat-label>
+    <input
+      type="text"
+      placeholder="Enter item"
+      aria-label="Enter item"
+      matInput
+      [formControl]="autocompleteControl"
+      [matAutocomplete]="auto"
+    />
+    <mat-autocomplete
+      #auto="matAutocomplete"
+      [autoSelectActiveOption]="true"
+      (optionSelected)="onOptionSelected($event)"
+    >
+      <mat-option
+        *ngFor="let option of filteredItems | async"
+        [value]="option.name"
+      >
+        {{ option.name }}
+      </mat-option>
+    </mat-autocomplete>
+  </mat-form-field>
+</form>
+
+<div *ngIf="selectedList | async; let list">
+  <p *ngFor="let item of list.items">{{ item.itemName }} - {{ item.count }}</p>
+</div>

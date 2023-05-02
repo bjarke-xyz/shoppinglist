@@ -10,4 +10,14 @@ export interface List {
   userId: string;
   name: string;
   createdAt: Date;
+  items: ListItem[];
+}
+
+export interface ListItem {
+  listId: string;
+  itemId: string;
+  itemName: string;
+  count: number;
+  createdAt: Date;
+  updatedAt: Date;
 }

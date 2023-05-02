@@ -19,12 +19,21 @@ export class ToastService {
     if (typeof error === 'string') {
       this._notification$.next({ message: error, config: defaultConfig });
     } else {
-      const errorMsg =
-        error?.error?.error?.message ??
-        error?.error?.error ??
-        error?.message ??
-        'An error occured';
-      this._notification$.next({ message: errorMsg, config: defaultConfig });
+      if (error?.error?.error?.name === 'ZodError') {
+        const issues = error.error.error.issues as { message: string }[];
+        const issuesStr = issues.map((x) => x.message).join('\n');
+        this._notification$.next({
+          message: issuesStr,
+          config: defaultConfig,
+        });
+      } else {
+        const errorMsg =
+          error?.error?.error?.message ??
+          error?.error?.error ??
+          error?.message ??
+          'An error occured';
+        this._notification$.next({ message: errorMsg, config: defaultConfig });
+      }
     }
   }
 }
