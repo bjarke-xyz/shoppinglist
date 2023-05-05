@@ -17,6 +17,12 @@ import { ListPickerComponent } from './components/list-picker/list-picker.compon
 import { MatBottomSheetModule } from '@angular/material/bottom-sheet';
 import { MatMenuModule } from '@angular/material/menu';
 import { MatAutocompleteModule } from '@angular/material/autocomplete';
+import {
+  MAT_CHECKBOX_DEFAULT_OPTIONS,
+  MatCheckboxDefaultOptions,
+  MatCheckboxModule,
+} from '@angular/material/checkbox';
+import { MatBadgeModule } from '@angular/material/badge';
 @NgModule({
   declarations: [
     ShoppingListComponent,
@@ -39,6 +45,14 @@ import { MatAutocompleteModule } from '@angular/material/autocomplete';
     MatBottomSheetModule,
     MatMenuModule,
     MatAutocompleteModule,
+    MatCheckboxModule,
+    MatBadgeModule,
+  ],
+  providers: [
+    {
+      provide: MAT_CHECKBOX_DEFAULT_OPTIONS,
+      useValue: { clickAction: 'noop' } as MatCheckboxDefaultOptions,
+    },
   ],
 })
 export class ShoppingListModule {}

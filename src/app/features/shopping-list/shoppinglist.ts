@@ -18,6 +18,7 @@ export interface ListItem {
   itemId: string;
   itemName: string;
   count: number;
+  crossed: boolean;
   createdAt: Date;
   updatedAt: Date;
 }

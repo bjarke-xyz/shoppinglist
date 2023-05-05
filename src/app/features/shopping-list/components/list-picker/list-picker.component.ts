@@ -55,7 +55,9 @@ export class ListPickerComponent {
       return;
     }
     this.shoppingListService.createList({ name: listName }).subscribe({
-      next: () => {
+      next: (list) => {
+        this.shoppingListService.selectList(list);
+        this.close();
         this.form.reset();
       },
       error: (error) => {

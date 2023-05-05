@@ -1,10 +1,11 @@
 import { Component, OnDestroy, OnInit } from '@angular/core';
 import { ShoppingListService } from '../../shopping-list.service';
 import { Observable, Subject, map, of, startWith, takeUntil, tap } from 'rxjs';
-import { Item } from '../../shoppinglist';
+import { Item, List, ListItem } from '../../shoppinglist';
 import { FormControl } from '@angular/forms';
 import { MatAutocompleteSelectedEvent } from '@angular/material/autocomplete';
 import { ToastService } from 'src/app/shared/services/toast.service';
+import { orderBy } from 'lodash';
 
 @Component({
   selector: 'app-main',
@@ -13,7 +14,14 @@ import { ToastService } from 'src/app/shared/services/toast.service';
 })
 export class MainComponent implements OnInit, OnDestroy {
   private readonly destroy = new Subject<void>();
-  public selectedList = this.shoppinglistService.selectedList;
+  public selectedList = this.shoppinglistService.selectedList
+    .pipe
+    // tap((list) => {
+    //   if (list) {
+    //     list.items = orderBy(list.items, (x) => x.crossed);
+    //   }
+    // })
+    ();
   autocompleteControl = new FormControl('');
   public items: Item[] = [];
   public filteredItems: Observable<Item[]> = of([]);
@@ -67,5 +75,19 @@ export class MainComponent implements OnInit, OnDestroy {
     return this.items.filter((item) =>
       item.name.toLowerCase().includes(filterValue)
     );
+  }
+
+  public crossListItem(listItem: ListItem): void {
+    const oldCrossedValue = listItem.crossed;
+    const newCrossedValue = !listItem.crossed;
+    listItem.crossed = newCrossedValue;
+    this.shoppinglistService
+      .crossListItem(listItem.itemId, newCrossedValue)
+      .subscribe({
+        error: (error) => {
+          this.toast.error(error);
+          listItem.crossed = oldCrossedValue;
+        },
+      });
   }
 }

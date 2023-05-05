@@ -41,9 +41,7 @@ export class ShoppingListService {
           this.selectList(null);
           return;
         }
-        if (correspondingList.name !== selectedList.name) {
-          this.selectList(correspondingList);
-        }
+        this.selectList(correspondingList);
       },
     });
   }
@@ -176,6 +174,53 @@ export class ShoppingListService {
       .pipe(
         tap((listItems) => {
           selectedList.items = listItems;
+          this.selectList(selectedList);
+        })
+      );
+  }
+
+  removeFromList(itemIds: string[]): Observable<void> {
+    const selectedList = this._selectedList.value;
+    if (!selectedList) {
+      return of();
+    }
+    const options = {
+      body: {
+        itemIds,
+      },
+    };
+    return this.http
+      .delete<void>(
+        `${environment.apiUrl}/api/lists/${selectedList.id}/items/`,
+        options
+      )
+      .pipe(
+        tap(() => {
+          selectedList.items = selectedList.items.filter(
+            (x) => !itemIds.includes(x.itemId)
+          );
+          this.selectList(selectedList);
+        })
+      );
+  }
+
+  crossListItem(itemId: string, crossed: boolean): Observable<void> {
+    const selectedList = this._selectedList.value;
+    if (!selectedList) {
+      return of();
+    }
+    return this.http
+      .patch<void>(
+        `${environment.apiUrl}/api/lists/${selectedList.id}/items/${itemId}/crossed`,
+        { crossed }
+      )
+      .pipe(
+        tap(() => {
+          for (const listItem of selectedList.items) {
+            if (listItem.itemId === itemId) {
+              listItem.crossed = crossed;
+            }
+          }
           this.selectList(selectedList);
         })
       );

@@ -2,15 +2,27 @@
   <header>
     <mat-toolbar>
       <button mat-button (click)="openListPicker()">
-        <ng-container *ngIf="selectedList | async; let list; else: selectList">
-          {{ list.name }}
-        </ng-container>
-        <ng-template #selectList> Select list </ng-template>
+        <h2>
+          <ng-container
+            *ngIf="selectedList | async; let list; else: selectList"
+          >
+            {{ list.name }}
+          </ng-container>
+          <ng-template #selectList> Select list </ng-template>
+        </h2>
       </button>
       <span class="example-spacer"></span>
-      <button mat-icon-button>
+      <button mat-icon-button [matMenuTriggerFor]="settingsMenu">
         <mat-icon>settings</mat-icon>
       </button>
+      <mat-menu #settingsMenu="matMenu">
+        <ng-container *ngIf="selectedList | async; let list">
+          <button mat-menu-item (click)="removeCrossed(list)">
+            Remove crossed
+          </button>
+        </ng-container>
+        <button mat-menu-item (click)="logout()">Log out</button>
+      </mat-menu>
     </mat-toolbar>
   </header>
   <main>

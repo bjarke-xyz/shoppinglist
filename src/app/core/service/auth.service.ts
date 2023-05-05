@@ -1,18 +1,8 @@
-import { HttpClient, HttpContext } from '@angular/common/http';
+import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
-import {
-  Observable,
-  catchError,
-  delay,
-  firstValueFrom,
-  map,
-  mergeMap,
-  of,
-  tap,
-  throwError,
-} from 'rxjs';
-import { environment } from '../../../environments/environment';
 import decodeJwt from 'jwt-decode';
+import { Observable, map, mergeMap, of } from 'rxjs';
+import { environment } from '../../../environments/environment';
 import { bypassInterceptor } from '../interceptor/token.interceptor';
 
 const TokenInfoKey = 'TokenInfo';
@@ -30,14 +20,19 @@ export class AuthService {
         password,
       })
       .pipe(
-        tap((result) => {
+        mergeMap((result) => {
           const tokenPair = {
             idToken: result.idToken,
             refreshToken: result.refreshToken,
           } as TokenPair;
           this.setTokenPair(tokenPair);
+          return of(result);
         })
       );
+  }
+
+  logout(): void {
+    this.setTokenPair(null);
   }
 
   refreshToken(): Observable<boolean> {
