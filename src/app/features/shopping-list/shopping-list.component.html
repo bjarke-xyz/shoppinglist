@@ -17,10 +17,20 @@
       </button>
       <mat-menu #settingsMenu="matMenu">
         <ng-container *ngIf="selectedList | async; let list">
-          <button mat-menu-item (click)="removeCrossed(list)">
+          <button
+            mat-menu-item
+            [disabled]="!subscription.closed"
+            (click)="removeCrossed(list)"
+          >
             Remove crossed
           </button>
-          <button mat-menu-item (click)="removeAll(list)">Remove all</button>
+          <button
+            mat-menu-item
+            [disabled]="!subscription.closed"
+            (click)="removeAll(list)"
+          >
+            Remove all
+          </button>
         </ng-container>
         <button mat-menu-item (click)="logout()">Log out</button>
       </mat-menu>

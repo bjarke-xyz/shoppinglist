@@ -6,6 +6,7 @@ import { ShoppingListService } from './shopping-list.service';
 import { List } from './shoppinglist';
 import { ToastService } from 'src/app/shared/services/toast.service';
 import { Router } from '@angular/router';
+import { Subscription } from 'rxjs';
 
 @Component({
   selector: 'app-shopping-list',
@@ -13,6 +14,7 @@ import { Router } from '@angular/router';
   styleUrls: ['./shopping-list.component.scss'],
 })
 export class ShoppingListComponent implements OnInit {
+  public subscription = Subscription.EMPTY;
   public selectedList = this.shoppinglistService.selectedList;
   constructor(
     private authService: AuthService,
@@ -32,7 +34,10 @@ export class ShoppingListComponent implements OnInit {
 
   public removeCrossed(list: List): void {
     const crossed = list.items.filter((x) => x.crossed);
-    this.shoppinglistService
+    if (crossed.length === 0) {
+      return;
+    }
+    this.subscription = this.shoppinglistService
       .removeFromList(crossed.map((x) => x.itemId))
       .subscribe({
         error: (error) => {
@@ -42,7 +47,7 @@ export class ShoppingListComponent implements OnInit {
   }
 
   public removeAll(list: List): void {
-    this.shoppinglistService
+    this.subscription = this.shoppinglistService
       .removeFromList(list.items.map((x) => x.itemId))
       .subscribe({
         error: (error) => {
