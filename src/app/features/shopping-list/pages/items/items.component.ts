@@ -1,10 +1,10 @@
 import { Component } from '@angular/core';
-import { ShoppingListService } from '../../shopping-list.service';
-import { Observable } from 'rxjs';
-import { Item } from '../../shoppinglist';
-import { ToastService } from 'src/app/shared/services/toast.service';
+import { FormBuilder } from '@angular/forms';
 import { MatDialog } from '@angular/material/dialog';
-import { FormBuilder, FormControl, FormGroup } from '@angular/forms';
+import { ToastService } from 'src/app/shared/services/toast.service';
+import { ShoppingListService } from '../../shopping-list.service';
+import { Item } from '../../shoppinglist';
+import { Subscription } from 'rxjs';
 
 @Component({
   selector: 'app-items',
@@ -12,6 +12,8 @@ import { FormBuilder, FormControl, FormGroup } from '@angular/forms';
   styleUrls: ['./items.component.scss'],
 })
 export class ItemsComponent {
+  public getSubscription = Subscription.EMPTY;
+  public subscription = Subscription.EMPTY;
   public items = this.shoppingListService.items;
   public form = this.fb.group({
     itemName: [''],
@@ -22,31 +24,15 @@ export class ItemsComponent {
     private dialog: MatDialog,
     private fb: FormBuilder
   ) {
-    this.shoppingListService.getItems().subscribe({
+    this.getSubscription = this.shoppingListService.getItems().subscribe({
       error: (error) => {
         this.toastService.error(error);
       },
     });
   }
 
-  createItem(): void {
-    if (!this.form.value.itemName) {
-      return;
-    }
-    this.shoppingListService
-      .createItem({ name: this.form.value.itemName })
-      .subscribe({
-        next: () => {
-          this.form.reset();
-        },
-        error: (error) => {
-          this.toastService.error(error);
-        },
-      });
-  }
-
   deleteItem(item: Item): void {
-    this.shoppingListService.deleteItem(item.id).subscribe({
+    this.subscription = this.shoppingListService.deleteItem(item.id).subscribe({
       error: (error) => {
         this.toastService.error(error);
       },

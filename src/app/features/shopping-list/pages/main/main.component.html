@@ -9,6 +9,7 @@
         matInput
         [formControl]="autocompleteControl"
         [matAutocomplete]="auto"
+        [readonly]="!addItemSubscription.closed"
       />
       <mat-autocomplete
         #auto="matAutocomplete"

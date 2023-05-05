@@ -1,6 +1,15 @@
 import { Component, OnDestroy, OnInit } from '@angular/core';
 import { ShoppingListService } from '../../shopping-list.service';
-import { Observable, Subject, map, of, startWith, takeUntil, tap } from 'rxjs';
+import {
+  Observable,
+  Subject,
+  Subscription,
+  map,
+  of,
+  startWith,
+  takeUntil,
+  tap,
+} from 'rxjs';
 import { Item, List, ListItem } from '../../shoppinglist';
 import { FormControl } from '@angular/forms';
 import { MatAutocompleteSelectedEvent } from '@angular/material/autocomplete';
@@ -13,15 +22,9 @@ import { orderBy } from 'lodash';
   styleUrls: ['./main.component.scss'],
 })
 export class MainComponent implements OnInit, OnDestroy {
+  public addItemSubscription = Subscription.EMPTY;
   private readonly destroy = new Subject<void>();
-  public selectedList = this.shoppinglistService.selectedList
-    .pipe
-    // tap((list) => {
-    //   if (list) {
-    //     list.items = orderBy(list.items, (x) => x.crossed);
-    //   }
-    // })
-    ();
+  public selectedList = this.shoppinglistService.selectedList;
   autocompleteControl = new FormControl('');
   public items: Item[] = [];
   public filteredItems: Observable<Item[]> = of([]);
@@ -35,7 +38,7 @@ export class MainComponent implements OnInit, OnDestroy {
       .subscribe((items) => {
         this.items = items;
         // patch control value to trigger other observable
-        this.autocompleteControl.patchValue('');
+        // this.autocompleteControl.patchValue('');
       });
     this.filteredItems = this.autocompleteControl.valueChanges.pipe(
       takeUntil(this.destroy),
@@ -48,19 +51,21 @@ export class MainComponent implements OnInit, OnDestroy {
     this.destroy.complete();
   }
 
-  public onSubmit(value: string | null) {
-    console.log(value);
-    if (!value) {
+  public onSubmit(inputValue: string | null) {
+    const value = inputValue?.trim();
+    if (!value || !this.addItemSubscription.closed) {
       return;
     }
-    this.shoppinglistService.addItemToList(value).subscribe({
-      next: () => {
-        this.autocompleteControl.reset();
-      },
-      error: (error) => {
-        this.toast.error(error);
-      },
-    });
+    this.addItemSubscription = this.shoppinglistService
+      .addItemToList(value)
+      .subscribe({
+        next: () => {
+          this.autocompleteControl.reset();
+        },
+        error: (error) => {
+          this.toast.error(error);
+        },
+      });
   }
 
   public onOptionSelected(event: MatAutocompleteSelectedEvent) {

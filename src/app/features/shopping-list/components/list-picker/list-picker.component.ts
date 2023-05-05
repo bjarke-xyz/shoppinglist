@@ -2,7 +2,7 @@ import { Component } from '@angular/core';
 import { FormBuilder } from '@angular/forms';
 import { MatBottomSheetRef } from '@angular/material/bottom-sheet';
 import { orderBy } from 'lodash';
-import { map } from 'rxjs';
+import { Subscription, map } from 'rxjs';
 import { ToastService } from 'src/app/shared/services/toast.service';
 import { ShoppingListService } from '../../shopping-list.service';
 import { List } from '../../shoppinglist';
@@ -13,6 +13,7 @@ import { List } from '../../shoppinglist';
   styleUrls: ['./list-picker.component.scss'],
 })
 export class ListPickerComponent {
+  public subscription = Subscription.EMPTY;
   public lists = this.shoppingListService.lists.pipe(
     map((lists) => orderBy(lists, (x) => x.createdAt, 'desc'))
   );
@@ -42,7 +43,7 @@ export class ListPickerComponent {
   }
 
   public deleteList(list: List) {
-    this.shoppingListService.deleteList(list.id).subscribe({
+    this.subscription = this.shoppingListService.deleteList(list.id).subscribe({
       error: (error) => {
         this.toast.error(error);
       },
@@ -54,15 +55,17 @@ export class ListPickerComponent {
     if (!listName) {
       return;
     }
-    this.shoppingListService.createList({ name: listName }).subscribe({
-      next: (list) => {
-        this.shoppingListService.selectList(list);
-        this.close();
-        this.form.reset();
-      },
-      error: (error) => {
-        this.toast.error(error);
-      },
-    });
+    this.subscription = this.shoppingListService
+      .createList({ name: listName })
+      .subscribe({
+        next: (list) => {
+          this.shoppingListService.selectList(list);
+          this.close();
+          this.form.reset();
+        },
+        error: (error) => {
+          this.toast.error(error);
+        },
+      });
   }
 }

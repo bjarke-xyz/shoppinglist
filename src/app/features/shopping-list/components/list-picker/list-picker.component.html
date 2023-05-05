@@ -1,7 +1,12 @@
 <form [formGroup]="form" (submit)="createList()" class="form">
   <mat-form-field>
     <mat-label>Create new list</mat-label>
-    <input matInput formControlName="listName" type="text" />
+    <input
+      matInput
+      formControlName="listName"
+      type="text"
+      [readonly]="!subscription.closed"
+    />
   </mat-form-field>
 </form>
 <div class="lists">
@@ -15,13 +20,23 @@
         >
           <mat-icon>more_vert</mat-icon>
         </button>
-        <button mat-button (click)="selectList(list)">{{ list.name }}</button>
+        <button
+          [disabled]="!subscription.closed"
+          mat-button
+          (click)="selectList(list)"
+        >
+          {{ list.name }}
+        </button>
         <mat-menu #menu="matMenu">
           <button mat-menu-item>
             <mat-icon>edit</mat-icon>
             <span>Rename</span>
           </button>
-          <button mat-menu-item (click)="deleteList(list)">
+          <button
+            mat-menu-item
+            [disabled]="!subscription.closed"
+            (click)="deleteList(list)"
+          >
             <mat-icon>delete_forever</mat-icon>
             <span>Delete</span>
           </button>

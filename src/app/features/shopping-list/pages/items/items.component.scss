@@ -1,13 +1,3 @@
-.create-item {
-  display: flex;
-  form {
-    display: flex;
-    flex: 1;
-    mat-form-field {
-      flex: 1;
-    }
-  }
-}
 .items {
   mat-card {
     margin: 0.5rem 0;

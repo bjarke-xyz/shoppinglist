@@ -44,6 +44,25 @@ export class ShoppingListService {
         this.selectList(correspondingList);
       },
     });
+    this.items.pipe(skip(1)).subscribe({
+      next: (items) => {
+        const selectedList = this._selectedList.value;
+        if (!selectedList) {
+          return;
+        }
+        const itemIds = new Set(items.map((x) => x.id));
+        const toRemove = new Set<string>();
+        for (const item of selectedList.items) {
+          if (!itemIds.has(item.itemId)) {
+            toRemove.add(item.itemId);
+          }
+        }
+        selectedList.items = selectedList.items.filter(
+          (x) => !toRemove.has(x.itemId)
+        );
+        this.selectList(selectedList);
+      },
+    });
   }
 
   getItems(): Observable<Item[]> {
@@ -184,15 +203,10 @@ export class ShoppingListService {
     if (!selectedList) {
       return of();
     }
-    const options = {
-      body: {
-        itemIds,
-      },
-    };
     return this.http
-      .delete<void>(
-        `${environment.apiUrl}/api/lists/${selectedList.id}/items/`,
-        options
+      .patch<void>(
+        `${environment.apiUrl}/api/lists/${selectedList.id}/items/delete`,
+        { itemIds }
       )
       .pipe(
         tap(() => {

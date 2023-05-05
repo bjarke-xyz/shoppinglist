@@ -41,6 +41,16 @@ export class ShoppingListComponent implements OnInit {
       });
   }
 
+  public removeAll(list: List): void {
+    this.shoppinglistService
+      .removeFromList(list.items.map((x) => x.itemId))
+      .subscribe({
+        error: (error) => {
+          this.toast.error(error);
+        },
+      });
+  }
+
   public logout(): void {
     this.shoppinglistService.selectList(null);
     this.authService.logout();
