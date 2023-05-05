@@ -10,6 +10,9 @@
         [formControl]="autocompleteControl"
         [matAutocomplete]="auto"
         [readonly]="!addItemSubscription.closed"
+        autocapitalize="none"
+        autocorrect="off"
+        autocomplete="off"
       />
       <mat-autocomplete
         #auto="matAutocomplete"
