@@ -26,6 +26,7 @@
     "@angular/platform-browser-dynamic": "^16.0.4",
     "@angular/platform-server": "^16.0.4",
     "@angular/router": "^16.0.4",
+    "@angular/service-worker": "^16.0.4",
     "@nguniversal/express-engine": "^16.0.2",
     "express": "^4.15.2",
     "jwt-decode": "^3.1.2",
