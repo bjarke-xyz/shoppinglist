@@ -31,6 +31,24 @@ export class AuthService {
       );
   }
 
+  register(email: string, password: string): Observable<SignUpResponse> {
+    return this.http
+      .post<SignUpResponse>(`${environment.apiUrl}/api/auth/register`, {
+        email,
+        password,
+      })
+      .pipe(
+        mergeMap((result) => {
+          const tokenPair = {
+            idToken: result.idToken,
+            refreshToken: result.refreshToken,
+          } as TokenPair;
+          this.setTokenPair(tokenPair);
+          return of(result);
+        })
+      );
+  }
+
   logout(): void {
     this.setTokenPair(null);
   }
@@ -125,6 +143,8 @@ export interface SignInResponse {
   localId: string;
   registered: boolean;
 }
+
+export type SignUpResponse = Omit<SignInResponse, 'registered'>;
 
 export interface TokenInfo {
   aud: string;

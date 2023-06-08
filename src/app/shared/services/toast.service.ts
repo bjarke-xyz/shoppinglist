@@ -14,6 +14,7 @@ export class ToastService {
   public error(error: any): void {
     const defaultConfig: MatSnackBarConfig = {
       duration: 3000,
+      panelClass: ['mat-toolbar', 'mat-warn'],
     };
     console.error(error);
     if (typeof error === 'string') {
@@ -30,11 +31,20 @@ export class ToastService {
         const errorMsg =
           error?.error?.error?.message ??
           error?.error?.error ??
+          error?.error ??
           error?.message ??
           'An error occured';
         this._notification$.next({ message: errorMsg, config: defaultConfig });
       }
     }
+  }
+
+  public info(text: string, duration = 3000): void {
+    const defaultConfig: MatSnackBarConfig = {
+      duration: duration,
+      panelClass: ['mat-toolbar', 'mat-primary'],
+    };
+    this._notification$.next({ message: text, config: defaultConfig });
   }
 }
 
