@@ -1,7 +1,7 @@
 import { Component } from '@angular/core';
 import { FormBuilder } from '@angular/forms';
 import { MatBottomSheetRef } from '@angular/material/bottom-sheet';
-import { orderBy } from 'lodash';
+import { orderBy } from 'lodash-es';
 import { Subscription, map } from 'rxjs';
 import { ToastService } from 'src/app/shared/services/toast.service';
 import { ShoppingListService } from '../../shopping-list.service';
