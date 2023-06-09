@@ -83,6 +83,7 @@ export class AuthService {
       mergeMap(() => {
         const token = this.decodeToken();
         if (!token) {
+          this.setTokenPair(null);
           return of(false);
         }
         const secondsSinceEpoch = Math.round(Date.now() / 1000);
@@ -100,8 +101,13 @@ export class AuthService {
     if (!tokenPair) {
       return null;
     }
-    const decoded = decodeJwt(tokenPair.idToken) as TokenInfo;
-    return decoded;
+    try {
+      const decoded = decodeJwt(tokenPair.idToken) as TokenInfo;
+      return decoded;
+    } catch (error) {
+      console.error('decodeToken failed', error);
+      return null;
+    }
   }
 
   getToken(): string | null {
