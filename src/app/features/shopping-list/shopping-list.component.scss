@@ -15,7 +15,7 @@ header {
 }
 
 .nav {
-  background: #ccf3e5;
+  background: var(--main-theme-color);
   display: flex;
   justify-content: space-around;
   padding-bottom: env(safe-area-inset-bottom);

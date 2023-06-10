@@ -39,6 +39,10 @@ $shoppinglist-frontend-theme: mat.define-light-theme(
 // that you are using.
 @include mat.all-component-themes($shoppinglist-frontend-theme);
 
+:root {
+  --main-theme-color: #ccf3e5;
+}
+
 html,
 body {
   height: 100%;
@@ -46,5 +50,5 @@ body {
 body {
   margin: 0;
   font-family: Roboto, "Helvetica Neue", sans-serif;
-  background-color: #ccf3e5;
+  background-color: var(--main-theme-color);
 }
