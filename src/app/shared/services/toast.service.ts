@@ -1,13 +1,11 @@
-import { Injectable } from '@angular/core';
+import { Injectable, signal } from '@angular/core';
 import { MatSnackBarConfig } from '@angular/material/snack-bar';
-import { Subject } from 'rxjs';
 
 @Injectable({
   providedIn: 'root',
 })
 export class ToastService {
-  private _notification$ = new Subject<ToastPayload>();
-  public notification$ = this._notification$.asObservable();
+  public notifications = signal<ToastPayload[]>([]);
 
   constructor() {}
 
@@ -18,14 +16,21 @@ export class ToastService {
     };
     console.error(error);
     if (typeof error === 'string') {
-      this._notification$.next({ message: error, config: defaultConfig });
+      this.notifications.mutate((toasts) => {
+        toasts.push({
+          message: error,
+          config: defaultConfig,
+        });
+      });
     } else {
       if (error?.error?.error?.name === 'ZodError') {
         const issues = error.error.error.issues as { message: string }[];
         const issuesStr = issues.map((x) => x.message).join('\n');
-        this._notification$.next({
-          message: issuesStr,
-          config: defaultConfig,
+        this.notifications.mutate((toasts) => {
+          toasts.push({
+            message: issuesStr,
+            config: defaultConfig,
+          });
         });
       } else {
         const errorMsg =
@@ -34,7 +39,12 @@ export class ToastService {
           error?.error ??
           error?.message ??
           'An error occured';
-        this._notification$.next({ message: errorMsg, config: defaultConfig });
+        this.notifications.mutate((toasts) => {
+          toasts.push({
+            message: errorMsg,
+            config: defaultConfig,
+          });
+        });
       }
     }
   }
@@ -44,7 +54,12 @@ export class ToastService {
       duration: duration,
       panelClass: ['mat-toolbar', 'mat-primary'],
     };
-    this._notification$.next({ message: text, config: defaultConfig });
+    this.notifications.mutate((toasts) => {
+      toasts.push({
+        message: text,
+        config: defaultConfig,
+      });
+    });
   }
 }
 

@@ -1,16 +1,8 @@
-import { Injectable } from '@angular/core';
-import {
-  BehaviorSubject,
-  Observable,
-  Subject,
-  filter,
-  of,
-  skip,
-  tap,
-} from 'rxjs';
-import { Item, List, ListItem } from './shoppinglist';
 import { HttpClient } from '@angular/common/http';
+import { Injectable, effect, signal } from '@angular/core';
+import { Observable, catchError, of, tap, throwError } from 'rxjs';
 import { environment } from 'src/environments/environment';
+import { AddItemToListResponse, Item, List } from './shoppinglist';
 
 const SelectedListKey = 'SELECTED_LIST';
 
@@ -18,57 +10,77 @@ const SelectedListKey = 'SELECTED_LIST';
   providedIn: 'root',
 })
 export class ShoppingListService {
-  private _items = new BehaviorSubject<Item[]>([]);
-  public items = this._items.asObservable();
-
-  private _lists = new BehaviorSubject<List[]>([]);
-  public lists = this._lists.asObservable();
-
-  private _selectedList = new BehaviorSubject<List | null>(null);
-  public selectedList = this._selectedList.asObservable();
-
-  constructor(private http: HttpClient) {
-    this.restoreSelectedList();
-
-    this.lists.pipe(skip(1)).subscribe({
-      next: (lists) => {
-        const selectedList = this._selectedList.value;
-        if (!selectedList) {
+  public items = signal<Item[]>([]);
+  private itemsEffect = effect(
+    () => {
+      const itemIds = new Set(this.items().map((x) => x.id));
+      // console.log('items effect', itemIds.size);
+      this.selectedList.mutate((currentlySelectedList) => {
+        if (!currentlySelectedList) {
           return;
         }
-        const correspondingList = lists.find((x) => x.id === selectedList.id);
-        if (!correspondingList) {
-          this.selectList(null);
-          return;
-        }
-        this.selectList(correspondingList);
-      },
-    });
-    this.items.pipe(skip(1)).subscribe({
-      next: (items) => {
-        const selectedList = this._selectedList.value;
-        if (!selectedList) {
-          return;
-        }
-        const itemIds = new Set(items.map((x) => x.id));
+        // console.log('items effect 2', itemIds.size, currentlySelectedList);
         const toRemove = new Set<string>();
-        for (const item of selectedList.items) {
+        for (const item of currentlySelectedList.items) {
           if (!itemIds.has(item.itemId)) {
             toRemove.add(item.itemId);
           }
         }
-        selectedList.items = selectedList.items.filter(
+        currentlySelectedList.items = currentlySelectedList.items.filter(
           (x) => !toRemove.has(x.itemId)
         );
-        this.selectList(selectedList);
-      },
-    });
+      });
+    },
+    { allowSignalWrites: true }
+  );
+
+  public lists = signal<List[] | undefined>(undefined);
+  private listsEffect = effect(
+    () => {
+      const lists = this.lists();
+      if (lists === undefined) return;
+      // console.log('lists effect', lists.length);
+      this.selectedList.update((currentlySelectedList) => {
+        if (!currentlySelectedList) {
+          return null;
+        }
+        // console.log('lists effect 2', lists.length, currentlySelectedList);
+        const correspondingList = lists.find(
+          (x) => x.id === currentlySelectedList.id
+        );
+        if (!correspondingList) {
+          return null;
+        }
+        return correspondingList;
+      });
+    },
+    { allowSignalWrites: true }
+  );
+
+  public selectedList = signal<List | null | undefined>(undefined);
+  private selectedListEffect = effect(() => {
+    const selectedList = this.selectedList();
+    // console.log('selectedList effect', selectedList);
+    if (selectedList === undefined) {
+      return;
+    }
+    if (selectedList) {
+      this.setLocalSelectedList(selectedList);
+    }
+  });
+
+  constructor(private http: HttpClient) {
+    this.restoreSelectedList();
   }
 
   getItems(): Observable<Item[]> {
     return this.http.get<Item[]>(`${environment.apiUrl}/api/items`).pipe(
       tap((items) => {
-        this._items.next(items);
+        this.items.set(items);
+      }),
+      catchError((err) => {
+        this.items.set([]);
+        return throwError(() => err);
       })
     );
   }
@@ -76,7 +88,9 @@ export class ShoppingListService {
   createItem(item: CreateItemRequest): Observable<Item> {
     return this.http.post<Item>(`${environment.apiUrl}/api/items`, item).pipe(
       tap((createdItem) => {
-        this._items.next([...this._items.value, createdItem]);
+        this.items.mutate((items) => {
+          items.push(createdItem);
+        });
       })
     );
   }
@@ -86,14 +100,14 @@ export class ShoppingListService {
       .put<Item>(`${environment.apiUrl}/api/items/${id}`, item)
       .pipe(
         tap((updatedItem) => {
-          const items = this._items.value;
-          const index = items.findIndex((x) => x.id === id);
-          if (index === -1) {
-            items.push(updatedItem);
-          } else {
-            items[index] = updatedItem;
-          }
-          this._items.next(items);
+          this.items.mutate((items) => {
+            const index = items.findIndex((x) => x.id === id);
+            if (index === -1) {
+              items.push(updatedItem);
+            } else {
+              items[index] = updatedItem;
+            }
+          });
         })
       );
   }
@@ -101,32 +115,32 @@ export class ShoppingListService {
   deleteItem(id: string): Observable<void> {
     return this.http.delete<void>(`${environment.apiUrl}/api/items/${id}`).pipe(
       tap(() => {
-        this._items.next([...this._items.value.filter((x) => x.id !== id)]);
+        this.items.mutate((items) => {
+          const index = items.findIndex((x) => x.id === id);
+          if (index !== -1) {
+            items.splice(index, 1);
+          }
+        });
       })
     );
   }
 
-  selectList(list: List | null): void {
-    this._selectedList.next(list);
-    this.setSelectedList(list);
-  }
-
   private restoreSelectedList(): void {
-    const list = this.getSelectedList();
+    const list = this.getLocalSelectedList();
     if (!list) {
       return;
     }
-    this.selectList(list);
+    // console.log('restore', list);
+    this.selectedList.set(list);
   }
 
-  private setSelectedList(list: List | null): void {
-    if (!list) {
-      localStorage.removeItem(SelectedListKey);
-      return;
-    }
+  private setLocalSelectedList(list: List): void {
     localStorage.setItem(SelectedListKey, JSON.stringify(list));
   }
-  private getSelectedList(): List | null {
+  public clearLocalSelectedList(): void {
+    localStorage.removeItem(SelectedListKey);
+  }
+  private getLocalSelectedList(): List | null {
     const json = localStorage.getItem(SelectedListKey);
     if (!json) {
       return null;
@@ -138,7 +152,11 @@ export class ShoppingListService {
   getLists(): Observable<List[]> {
     return this.http.get<List[]>(`${environment.apiUrl}/api/lists`).pipe(
       tap((lists) => {
-        this._lists.next(lists);
+        this.lists.set(lists);
+      }),
+      catchError((err) => {
+        this.lists.set([]);
+        return throwError(() => err);
       })
     );
   }
@@ -146,7 +164,10 @@ export class ShoppingListService {
   createList(req: CreateListRequest) {
     return this.http.post<List>(`${environment.apiUrl}/api/lists`, req).pipe(
       tap((list) => {
-        this._lists.next([...this._lists.value, list]);
+        this.lists.mutate((lists) => {
+          if (lists === undefined) return;
+          lists.push(list);
+        });
       })
     );
   }
@@ -156,14 +177,15 @@ export class ShoppingListService {
       .put<List>(`${environment.apiUrl}/api/list/${listId}`, req)
       .pipe(
         tap((updatedList) => {
-          const lists = this._lists.value;
-          const index = lists.findIndex((x) => x.id === listId);
-          if (index === -1) {
-            lists.push(updatedList);
-          } else {
-            lists[index] = updatedList;
-          }
-          this._lists.next(lists);
+          this.lists.mutate((lists) => {
+            if (lists === undefined) return;
+            const index = lists.findIndex((x) => x.id === listId);
+            if (index === -1) {
+              lists.push(updatedList);
+            } else {
+              lists[index] = updatedList;
+            }
+          });
         })
       );
   }
@@ -173,33 +195,47 @@ export class ShoppingListService {
       .delete<void>(`${environment.apiUrl}/api/lists/${listId}`)
       .pipe(
         tap(() => {
-          this._lists.next([
-            ...this._lists.value.filter((x) => x.id !== listId),
-          ]);
+          this.lists.mutate((lists) => {
+            if (lists === undefined) return;
+            const index = lists.findIndex((x) => x.id === listId);
+            if (index !== -1) {
+              lists.splice(index, 1);
+            }
+          });
         })
       );
   }
 
-  addItemToList(itemName: string): Observable<null | ListItem[]> {
-    const selectedList = this._selectedList.value;
+  addItemToList(itemName: string): Observable<null | AddItemToListResponse> {
+    const selectedList = this.selectedList();
     if (!selectedList) {
       return of(null);
     }
     return this.http
-      .post<ListItem[]>(
+      .post<AddItemToListResponse>(
         `${environment.apiUrl}/api/lists/${selectedList.id}/items`,
         { itemName }
       )
       .pipe(
-        tap((listItems) => {
-          selectedList.items = listItems;
-          this.selectList(selectedList);
+        tap(({ listItems, addedItem }) => {
+          this.selectedList.mutate((list) => {
+            if (!list) {
+              return;
+            }
+            list.items = listItems;
+          });
+          this.items.mutate((items) => {
+            const itemAlreadyExists = items.some((x) => x.id === addedItem.id);
+            if (!itemAlreadyExists) {
+              items.push(addedItem);
+            }
+          });
         })
       );
   }
 
   removeFromList(itemIds: string[]): Observable<void> {
-    const selectedList = this._selectedList.value;
+    const selectedList = this.selectedList();
     if (!selectedList) {
       return of();
     }
@@ -210,16 +246,16 @@ export class ShoppingListService {
       )
       .pipe(
         tap(() => {
-          selectedList.items = selectedList.items.filter(
-            (x) => !itemIds.includes(x.itemId)
-          );
-          this.selectList(selectedList);
+          this.selectedList.mutate((list) => {
+            if (!list) return;
+            list.items = list.items.filter((x) => !itemIds.includes(x.itemId));
+          });
         })
       );
   }
 
   crossListItem(itemId: string, crossed: boolean): Observable<void> {
-    const selectedList = this._selectedList.value;
+    const selectedList = this.selectedList();
     if (!selectedList) {
       return of();
     }
@@ -230,12 +266,14 @@ export class ShoppingListService {
       )
       .pipe(
         tap(() => {
-          for (const listItem of selectedList.items) {
-            if (listItem.itemId === itemId) {
-              listItem.crossed = crossed;
+          this.selectedList.mutate((list) => {
+            if (!list) return;
+            for (const listItem of list.items) {
+              if (listItem.itemId === itemId) {
+                listItem.crossed = crossed;
+              }
             }
-          }
-          this.selectList(selectedList);
+          });
         })
       );
   }

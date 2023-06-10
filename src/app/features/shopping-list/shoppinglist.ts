@@ -22,3 +22,8 @@ export interface ListItem {
   createdAt: Date;
   updatedAt: Date;
 }
+
+export interface AddItemToListResponse {
+  listItems: ListItem[];
+  addedItem: Item;
+}

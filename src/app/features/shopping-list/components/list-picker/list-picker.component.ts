@@ -1,8 +1,8 @@
-import { Component } from '@angular/core';
+import { Component, WritableSignal, computed } from '@angular/core';
 import { FormBuilder } from '@angular/forms';
 import { MatBottomSheetRef } from '@angular/material/bottom-sheet';
 import { orderBy } from 'lodash-es';
-import { Subscription, map } from 'rxjs';
+import { OperatorFunction, Subscription, map } from 'rxjs';
 import { ToastService } from 'src/app/shared/services/toast.service';
 import { ShoppingListService } from '../../shopping-list.service';
 import { List } from '../../shoppinglist';
@@ -14,8 +14,8 @@ import { List } from '../../shoppinglist';
 })
 export class ListPickerComponent {
   public subscription = Subscription.EMPTY;
-  public lists = this.shoppingListService.lists.pipe(
-    map((lists) => orderBy(lists, (x) => x.createdAt, 'desc'))
+  public lists = computed(() =>
+    orderBy(this.shoppingListService.lists(), (x) => x.createdAt)
   );
   public form = this.fb.group({
     listName: [''],
@@ -38,7 +38,7 @@ export class ListPickerComponent {
   }
 
   public selectList(list: List) {
-    this.shoppingListService.selectList(list);
+    this.shoppingListService.selectedList.set(list);
     this.close();
   }
 
@@ -59,7 +59,7 @@ export class ListPickerComponent {
       .createList({ name: listName })
       .subscribe({
         next: (list) => {
-          this.shoppingListService.selectList(list);
+          this.shoppingListService.selectedList.set(list);
           this.close();
           this.form.reset();
         },

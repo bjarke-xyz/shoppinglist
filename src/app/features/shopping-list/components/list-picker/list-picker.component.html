@@ -11,7 +11,7 @@
 </form>
 <div class="lists">
   <mat-list>
-    <mat-list-item *ngFor="let list of lists | async">
+    <mat-list-item *ngFor="let list of lists()">
       <div class="list-item-container">
         <button
           mat-icon-button

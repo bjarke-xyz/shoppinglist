@@ -1,28 +1,26 @@
-import { Component, OnDestroy, OnInit } from '@angular/core';
-import { ToastService } from './shared/services/toast.service';
-import { Subject, takeUntil } from 'rxjs';
+import { Component, effect } from '@angular/core';
 import { MatSnackBar } from '@angular/material/snack-bar';
+import { ToastService } from './shared/services/toast.service';
 
 @Component({
   selector: 'app-root',
   templateUrl: './app.component.html',
   styleUrls: ['./app.component.scss'],
 })
-export class AppComponent implements OnInit, OnDestroy {
-  private readonly destroy = new Subject<void>();
+export class AppComponent {
   constructor(
     private toastService: ToastService,
     private snackbar: MatSnackBar
-  ) {}
-  ngOnInit(): void {
-    this.toastService.notification$
-      .pipe(takeUntil(this.destroy))
-      .subscribe(({ message, action, config }) => {
-        this.snackbar.open(message, action, config);
-      });
-  }
-  ngOnDestroy(): void {
-    this.destroy.next();
-    this.destroy.complete();
+  ) {
+    effect(() => {
+      const toasts = this.toastService.notifications();
+      // console.log('toasts effect', toasts.length);
+      while (toasts.length > 0) {
+        const toast = toasts.pop();
+        if (toast) {
+          this.snackbar.open(toast.message, toast.action, toast.config);
+        }
+      }
+    });
   }
 }

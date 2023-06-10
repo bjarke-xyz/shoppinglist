@@ -3,9 +3,7 @@
     <mat-toolbar>
       <button mat-button (click)="openListPicker()">
         <h2>
-          <ng-container
-            *ngIf="selectedList | async; let list; else: selectList"
-          >
+          <ng-container *ngIf="selectedList(); let list; else: selectList">
             {{ list.name }}
           </ng-container>
           <ng-template #selectList> Select list </ng-template>
@@ -16,7 +14,7 @@
         <mat-icon>settings</mat-icon>
       </button>
       <mat-menu #settingsMenu="matMenu">
-        <ng-container *ngIf="selectedList | async; let list">
+        <ng-container *ngIf="selectedList(); let list">
           <button
             mat-menu-item
             [disabled]="!subscription.closed"

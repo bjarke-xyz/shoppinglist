@@ -3,7 +3,7 @@
 </div>
 <ng-template #itemsTempl>
   <div class="items">
-    <mat-card *ngFor="let item of items | async">
+    <mat-card *ngFor="let item of items()">
       <mat-card-content>
         <mat-card-title>
           {{ item.name }}

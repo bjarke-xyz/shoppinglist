@@ -57,7 +57,8 @@ export class ShoppingListComponent implements OnInit {
   }
 
   public logout(): void {
-    this.shoppinglistService.selectList(null);
+    this.shoppinglistService.selectedList.set(null);
+    this.shoppinglistService.clearLocalSelectedList();
     this.authService.logout();
     this.router.navigateByUrl('/');
   }

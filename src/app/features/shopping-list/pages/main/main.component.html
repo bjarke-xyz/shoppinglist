@@ -1,4 +1,4 @@
-<div *ngIf="selectedList | async; let list" class="container">
+<div *ngIf="selectedList(); let list" class="container">
   <form class="form" (submit)="onSubmit(autocompleteControl.value)">
     <mat-form-field class="example-full-width" appearance="fill">
       <mat-label>Item</mat-label>
@@ -20,7 +20,7 @@
         (optionSelected)="onOptionSelected($event)"
       >
         <mat-option
-          *ngFor="let option of filteredItems | async"
+          *ngFor="let option of filteredItems()"
           [value]="option.name"
         >
           {{ option.name }}
