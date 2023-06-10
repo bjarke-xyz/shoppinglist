@@ -4,7 +4,7 @@
   "theme_color": "#CDF4E6",
   "background_color": "#fafafa",
   "display": "standalone",
-  "scope": "./",
+  "scope": "./app",
   "start_url": "./app",
   "icons": [
     {
