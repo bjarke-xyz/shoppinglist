@@ -8,10 +8,7 @@ import { environment } from 'src/environments/environment';
 })
 export class AboutComponent {
   private readonly eventSource = new EventSource(
-    `${environment.apiUrl}/api/events/events`,
-    {
-      withCredentials: true,
-    }
+    `${environment.apiUrl}/api/events/events`
   );
   public events = signal<string[]>([]);
 
