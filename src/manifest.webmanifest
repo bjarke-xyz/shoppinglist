@@ -1,7 +1,7 @@
 {
   "name": "ShoppingList",
   "short_name": "SL",
-  "theme_color": "#CDF4E6",
+  "theme_color": "#CCF3E5",
   "background_color": "#fafafa",
   "display": "standalone",
   "scope": "./app",
