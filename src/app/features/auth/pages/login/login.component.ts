@@ -48,7 +48,6 @@ export class LoginComponent {
     obs.subscribe({
       next: async (resp) => {
         try {
-          console.log(resp);
           if (this.register) {
             this.toast.info(
               `A confirmation email has been sent to ${this.form.value.email}`,

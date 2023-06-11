@@ -2,8 +2,9 @@ import { HttpClient } from '@angular/common/http';
 import { Injectable, effect, signal } from '@angular/core';
 import { Observable, catchError, of, tap, throwError } from 'rxjs';
 import { environment } from 'src/environments/environment';
-import { AddItemToListResponse, Item, List } from './shoppinglist';
+import { AddItemToListResponse, Item, List, ListItem } from './shoppinglist';
 import { AuthService } from '../../core/service/auth.service';
+import { clientId } from 'src/app/core/interceptor/client-id.interceptor';
 
 const SelectedListKey = 'SELECTED_LIST';
 
@@ -147,7 +148,52 @@ export class ShoppingListService {
       }/api/sse/sse?idToken=${this.authService.getToken()}&listId=${list.id}`
     );
     ws.addEventListener('message', (event) => {
-      console.log(event);
+      const payload = JSON.parse(event.data) as BroadcastPayload;
+      if (payload.initiator === clientId) {
+        return;
+      }
+      console.log(payload);
+      switch (payload.type) {
+        case 'ListItemCrossed': {
+          const data = payload.data as ListItemCrossed;
+          this.lists.mutate((lists) => {
+            if (!lists) return;
+            const l = lists.find((x) => x.id === list.id);
+            if (!l) return;
+            const item = l.items.find((x) => x.itemId === data.itemId);
+            if (!item) return;
+            item.crossed = data.crossed;
+          });
+          break;
+        }
+        case 'ListItemAdded': {
+          const data = payload.data as ListItemAddEvent;
+          this.lists.mutate((lists) => {
+            if (!lists) return;
+            const l = lists.find((x) => x.id === list.id);
+            if (!l) return;
+            l.items = data.listItems;
+          });
+          this.items.mutate((items) => {
+            const itemAlreadyExists = items.some(
+              (x) => x.id === data.addedItem.id
+            );
+            if (!itemAlreadyExists) {
+              items.push(data.addedItem);
+            }
+          });
+          break;
+        }
+        case 'ListItemsRemoved': {
+          const data = payload.data as ListItemsRemoved;
+          this.lists.mutate((lists) => {
+            if (!lists) return;
+            const l = lists.find((x) => x.id === list.id);
+            if (!l) return;
+            l.items = l.items.filter((x) => !data.itemIds.includes(x.itemId));
+          });
+        }
+      }
     });
     this.selectedListWebSocket.set(list.id, ws);
   }
@@ -327,4 +373,22 @@ export interface CreateItemRequest {
 
 export interface CreateListRequest {
   name: string;
+}
+type EventType = 'ListItemAdded' | 'ListItemsRemoved' | 'ListItemCrossed';
+type EventData = ListItemAddEvent | ListItemsRemoved | ListItemCrossed;
+interface BroadcastPayload {
+  type: EventType;
+  data: EventData;
+  initiator?: string;
+}
+interface ListItemAddEvent {
+  listItems: ListItem[];
+  addedItem: Item;
+}
+interface ListItemsRemoved {
+  itemIds: string[];
+}
+interface ListItemCrossed {
+  itemId: string;
+  crossed: boolean;
 }

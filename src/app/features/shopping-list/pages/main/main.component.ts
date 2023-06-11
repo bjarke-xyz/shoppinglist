@@ -28,14 +28,7 @@ export class MainComponent implements OnInit {
   constructor(
     private shoppinglistService: ShoppingListService,
     private toast: ToastService
-  ) {
-    effect(() => {
-      console.log(this.filteredItems());
-    });
-    effect(() => {
-      console.log(this.shoppinglistService.items());
-    });
-  }
+  ) {}
   ngOnInit(): void {}
 
   public onSubmit(inputValue: string | null) {
