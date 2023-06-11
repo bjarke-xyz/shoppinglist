@@ -3,6 +3,7 @@ import { Injectable, effect, signal } from '@angular/core';
 import { Observable, catchError, of, tap, throwError } from 'rxjs';
 import { environment } from 'src/environments/environment';
 import { AddItemToListResponse, Item, List } from './shoppinglist';
+import { AuthService } from '../../core/service/auth.service';
 
 const SelectedListKey = 'SELECTED_LIST';
 
@@ -66,10 +67,15 @@ export class ShoppingListService {
     }
     if (selectedList) {
       this.setLocalSelectedList(selectedList);
+      this.connectToWebSocket(selectedList);
+    } else {
+      this.closeWebSocketConnection();
     }
   });
 
-  constructor(private http: HttpClient) {
+  private selectedListWebSocket = new Map<string, WebSocket>();
+
+  constructor(private http: HttpClient, private authService: AuthService) {
     this.restoreSelectedList();
   }
 
@@ -123,6 +129,42 @@ export class ShoppingListService {
         });
       })
     );
+  }
+
+  private connectToWebSocket(list: List): void {
+    const existingWs = this.selectedListWebSocket.get(list.id);
+    if (existingWs) {
+      if (existingWs.readyState == WebSocket.OPEN) {
+        return;
+      }
+      if (existingWs.readyState == WebSocket.CLOSED) {
+        this.closeWebSocketConnection(list.id);
+      }
+    }
+    const ws = new WebSocket(
+      `${
+        environment.wsUrl
+      }/api/sse/sse?idToken=${this.authService.getToken()}&listId=${list.id}`
+    );
+    ws.addEventListener('message', (event) => {
+      console.log(event);
+    });
+    this.selectedListWebSocket.set(list.id, ws);
+  }
+
+  private closeWebSocketConnection(listId?: string): void {
+    if (listId) {
+      const ws = this.selectedListWebSocket.get(listId);
+      if (ws) {
+        ws.close();
+        this.selectedListWebSocket.delete(listId);
+      }
+    } else {
+      for (const [list, ws] of this.selectedListWebSocket) {
+        ws.close();
+      }
+      this.selectedListWebSocket.clear();
+    }
   }
 
   private restoreSelectedList(): void {
