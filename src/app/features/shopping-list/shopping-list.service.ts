@@ -216,6 +216,17 @@ export class ShoppingListService {
             if (!l) return;
             l.items = l.items.filter((x) => !data.itemIds.includes(x.itemId));
           });
+          break;
+        }
+        case 'ItemDeleted': {
+          const data = payload.data as ItemDeletedEvent;
+          this.items.mutate((items) => {
+            if (!items) return;
+            const index = items.findIndex((x) => x.id === data.itemId);
+            if (index !== -1) {
+              items.splice(index, 1);
+            }
+          });
         }
       }
     });
@@ -398,8 +409,17 @@ export interface CreateItemRequest {
 export interface CreateListRequest {
   name: string;
 }
-type EventType = 'ListItemAdded' | 'ListItemsRemoved' | 'ListItemCrossed';
-type EventData = ListItemAddEvent | ListItemsRemoved | ListItemCrossed;
+
+type EventType =
+  | 'ListItemAdded'
+  | 'ListItemsRemoved'
+  | 'ListItemCrossed'
+  | 'ItemDeleted';
+type EventData =
+  | ListItemAddEvent
+  | ListItemsRemoved
+  | ListItemCrossed
+  | ItemDeletedEvent;
 interface BroadcastPayload {
   type: EventType;
   data: EventData;
@@ -415,4 +435,7 @@ interface ListItemsRemoved {
 interface ListItemCrossed {
   itemId: string;
   crossed: boolean;
+}
+interface ItemDeletedEvent {
+  itemId: string;
 }
