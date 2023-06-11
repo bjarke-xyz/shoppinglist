@@ -21,7 +21,7 @@ export class MainComponent implements OnInit {
   );
   public filteredItems = computed(() =>
     this._filter(
-      this.shoppinglistService.items(),
+      this.shoppinglistService.items() ?? [],
       this.autocompleteControlValueChanges()
     )
   );

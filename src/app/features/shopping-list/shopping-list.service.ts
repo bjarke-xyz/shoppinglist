@@ -5,6 +5,7 @@ import { environment } from 'src/environments/environment';
 import { AddItemToListResponse, Item, List, ListItem } from './shoppinglist';
 import { AuthService } from '../../core/service/auth.service';
 import { clientId } from 'src/app/core/interceptor/client-id.interceptor';
+import { isEqual } from 'lodash-es';
 
 const SelectedListKey = 'SELECTED_LIST';
 
@@ -12,10 +13,12 @@ const SelectedListKey = 'SELECTED_LIST';
   providedIn: 'root',
 })
 export class ShoppingListService {
-  public items = signal<Item[]>([]);
+  public items = signal<Item[] | undefined>(undefined, { equal: isEqual });
   private itemsEffect = effect(
     () => {
-      const itemIds = new Set(this.items().map((x) => x.id));
+      const items = this.items();
+      if (items === undefined) return;
+      const itemIds = new Set(items.map((x) => x.id));
       // console.log('items effect', itemIds.size);
       this.selectedList.mutate((currentlySelectedList) => {
         if (!currentlySelectedList) {
@@ -36,7 +39,7 @@ export class ShoppingListService {
     { allowSignalWrites: true }
   );
 
-  public lists = signal<List[] | undefined>(undefined);
+  public lists = signal<List[] | undefined>(undefined, { equal: isEqual });
   private listsEffect = effect(
     () => {
       const lists = this.lists();
@@ -59,10 +62,12 @@ export class ShoppingListService {
     { allowSignalWrites: true }
   );
 
-  public selectedList = signal<List | null | undefined>(undefined);
+  public selectedList = signal<List | null | undefined>(undefined, {
+    equal: isEqual,
+  });
   private selectedListEffect = effect(() => {
     const selectedList = this.selectedList();
-    // console.log('selectedList effect', selectedList);
+    console.log('selectedList effect', selectedList);
     if (selectedList === undefined) {
       return;
     }
@@ -96,6 +101,7 @@ export class ShoppingListService {
     return this.http.post<Item>(`${environment.apiUrl}/api/items`, item).pipe(
       tap((createdItem) => {
         this.items.mutate((items) => {
+          if (!items) return;
           items.push(createdItem);
         });
       })
@@ -108,6 +114,7 @@ export class ShoppingListService {
       .pipe(
         tap((updatedItem) => {
           this.items.mutate((items) => {
+            if (!items) return;
             const index = items.findIndex((x) => x.id === id);
             if (index === -1) {
               items.push(updatedItem);
@@ -123,6 +130,7 @@ export class ShoppingListService {
     return this.http.delete<void>(`${environment.apiUrl}/api/items/${id}`).pipe(
       tap(() => {
         this.items.mutate((items) => {
+          if (!items) return;
           const index = items.findIndex((x) => x.id === id);
           if (index !== -1) {
             items.splice(index, 1);
@@ -135,11 +143,13 @@ export class ShoppingListService {
   private connectToWebSocket(list: List): void {
     const existingWs = this.selectedListWebSocket.get(list.id);
     if (existingWs) {
-      if (existingWs.readyState == WebSocket.OPEN) {
-        return;
-      }
-      if (existingWs.readyState == WebSocket.CLOSED) {
-        this.closeWebSocketConnection(list.id);
+      switch (existingWs.readyState) {
+        case WebSocket.OPEN:
+        case WebSocket.CONNECTING:
+          return;
+        default:
+          this.closeWebSocketConnection(list.id);
+          break;
       }
     }
     const ws = new WebSocket(
@@ -147,6 +157,15 @@ export class ShoppingListService {
         environment.wsUrl
       }/api/sse/sse?idToken=${this.authService.getToken()}&listId=${list.id}`
     );
+    this.selectedListWebSocket.set(list.id, ws);
+    ws.addEventListener('error', (event) => {
+      console.log('ws error', event);
+      this.closeWebSocketConnection(list.id);
+    });
+    ws.addEventListener('close', (event) => {
+      console.log('ws close', event);
+      this.closeWebSocketConnection(list.id);
+    });
     ws.addEventListener('message', (event) => {
       const payload = JSON.parse(event.data) as BroadcastPayload;
       if (payload.initiator === clientId) {
@@ -175,6 +194,7 @@ export class ShoppingListService {
             l.items = data.listItems;
           });
           this.items.mutate((items) => {
+            if (!items) return;
             const itemAlreadyExists = items.some(
               (x) => x.id === data.addedItem.id
             );
@@ -195,7 +215,6 @@ export class ShoppingListService {
         }
       }
     });
-    this.selectedListWebSocket.set(list.id, ws);
   }
 
   private closeWebSocketConnection(listId?: string): void {
@@ -313,6 +332,7 @@ export class ShoppingListService {
             list.items = listItems;
           });
           this.items.mutate((items) => {
+            if (!items) return;
             const itemAlreadyExists = items.some((x) => x.id === addedItem.id);
             if (!itemAlreadyExists) {
               items.push(addedItem);
