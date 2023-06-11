@@ -67,7 +67,7 @@ export class ShoppingListService {
   });
   private selectedListEffect = effect(() => {
     const selectedList = this.selectedList();
-    console.log('selectedList effect', selectedList);
+    // console.log('selectedList effect', selectedList);
     if (selectedList === undefined) {
       return;
     }
@@ -163,7 +163,7 @@ export class ShoppingListService {
     );
     this.selectedListWebSocket.set(list.id, ws);
     ws.addEventListener('error', (event) => {
-      console.log('ws error', event);
+      console.error('ws error', event);
       this.closeWebSocketConnection(list.id);
     });
     ws.addEventListener('close', (event) => {
