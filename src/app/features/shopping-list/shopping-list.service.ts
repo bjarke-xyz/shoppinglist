@@ -73,7 +73,11 @@ export class ShoppingListService {
     }
     if (selectedList) {
       this.setLocalSelectedList(selectedList);
-      this.connectToWebSocket(selectedList);
+      try {
+        this.connectToWebSocket(selectedList);
+      } catch (error) {
+        console.error('ws failed');
+      }
     } else {
       this.closeWebSocketConnection();
     }
