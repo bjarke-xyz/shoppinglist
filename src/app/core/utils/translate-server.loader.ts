@@ -23,7 +23,7 @@ export class TranslateServerLoader implements TranslateLoader {
       );
 
       const jsonData = JSON.parse(
-        readFileSync(`${assetsFolder}/${lang}.${this.suffix}`, 'utf8')
+        readFileSync(`${assetsFolder}/${lang}${this.suffix}`, 'utf8')
       );
 
       const key: StateKey<number> = makeStateKey<number>(

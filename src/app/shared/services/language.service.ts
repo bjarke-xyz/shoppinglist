@@ -22,10 +22,10 @@ export class LanguageService {
   constructor(private translateService: TranslateService) {}
 
   public init(): void {
-    const storageLang = localStorage.getItem('language') as Locale;
+    const storageLang = this.getStorageLang();
     if (storageLang) {
       this.useLanguage(storageLang);
-    } else if (window.navigator?.language) {
+    } else if (typeof window !== 'undefined' && window.navigator?.language) {
       if (window.navigator.language.startsWith('da')) {
         this.useLanguage('da');
       } else {
@@ -38,6 +38,24 @@ export class LanguageService {
 
   public useLanguage(lang: Locale): void {
     this.translateService.use(lang);
-    localStorage.setItem('language', lang);
+    try {
+      if (typeof localStorage !== 'undefined') {
+        localStorage.setItem('language', lang);
+      }
+    } catch (error) {
+      console.error('failed to set localstorage language', error);
+    }
+  }
+
+  private getStorageLang(): Locale | null {
+    if (typeof localStorage === 'undefined') {
+      return null;
+    }
+    try {
+      const storageLang = localStorage.getItem('language') as Locale;
+      return storageLang;
+    } catch {
+      return null;
+    }
   }
 }
