@@ -1,11 +1,9 @@
 <div *ngIf="selectedList(); let list" class="container">
   <form class="form" (submit)="onSubmit(autocompleteControl.value)">
     <mat-form-field class="example-full-width" appearance="fill">
-      <mat-label>Item</mat-label>
+      <mat-label>{{ "NEW_ITEM" | translate }}</mat-label>
       <input
         type="text"
-        placeholder="Enter item"
-        aria-label="Enter item"
         matInput
         [formControl]="autocompleteControl"
         [matAutocomplete]="auto"

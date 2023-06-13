@@ -24,6 +24,7 @@ import {
 } from '@angular/material/checkbox';
 import { MatBadgeModule } from '@angular/material/badge';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { TranslateModule } from '@ngx-translate/core';
 @NgModule({
   declarations: [
     ShoppingListComponent,
@@ -49,6 +50,7 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
     MatCheckboxModule,
     MatBadgeModule,
     MatProgressSpinnerModule,
+    TranslateModule,
   ],
   providers: [
     {

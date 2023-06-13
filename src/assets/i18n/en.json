@@ -1,0 +1,15 @@
+{
+  "NEW_ITEM": "New item...",
+  "SSS_TITLE": "Simple Shopping List",
+  "SSS_DESCRIPTION": "Simple shopping list application, accessible on web and mobile.",
+  "GO_TO_APP": "Go to app",
+  "DELETE": "Delete",
+  "SELECT_LIST": "Select list",
+  "REMOVE_CROSSED": "Remove crossed",
+  "REMOVE_ALL": "Remove all",
+  "LOGOUT": "Log out",
+  "ACTIVE_LIST": "Your active list",
+  "ITEMS": "Items",
+  "NEW_LIST": "New list...",
+  "RENAME": "Rename"
+}

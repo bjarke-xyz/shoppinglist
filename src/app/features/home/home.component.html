@@ -1,16 +1,18 @@
 <div class="container">
   <mat-card class="card">
     <mat-card-header>
-      <mat-card-title> <h1>Simple Shopping List</h1> </mat-card-title>
+      <mat-card-title>
+        <h1>{{ "SSS_TITLE" | translate }}</h1>
+      </mat-card-title>
     </mat-card-header>
     <mat-card-actions align="end">
       <a mat-button extended [routerLink]="['/app']">
         <mat-icon>open_in_new</mat-icon>
-        Go to app
+        {{ "GO_TO_APP" | translate }}
       </a>
     </mat-card-actions>
     <mat-card-content>
-      <p>Simple shopping list application, accessible on web and mobile.</p>
+      <p>{{ "SSS_DESCRIPTION" | translate }}</p>
       <p>TODO: Update images</p>
       <div class="images">
         <img

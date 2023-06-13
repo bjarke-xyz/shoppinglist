@@ -1,4 +1,4 @@
-import { NgModule, isDevMode } from '@angular/core';
+import { NgModule, TransferState, isDevMode } from '@angular/core';
 import { BrowserModule } from '@angular/platform-browser';
 
 import { AppRoutingModule } from './app-routing.module';
@@ -11,6 +11,9 @@ import {
   RippleGlobalOptions,
 } from '@angular/material/core';
 import { ServiceWorkerModule } from '@angular/service-worker';
+import { TranslateLoader, TranslateModule } from '@ngx-translate/core';
+import { translateBrowserLoaderFactory } from './core/utils/translate-browser.loader';
+import { HttpClient } from '@angular/common/http';
 const globalRippleConfig: RippleGlobalOptions = {
   disabled: true,
 };
@@ -27,12 +30,22 @@ const globalRippleConfig: RippleGlobalOptions = {
 
     // app
     AppRoutingModule,
-     ServiceWorkerModule.register('ngsw-worker.js', {
-       enabled: !isDevMode(),
-       // Register the ServiceWorker as soon as the application is stable
-       // or after 30 seconds (whichever comes first).
-       registrationStrategy: 'registerWhenStable:30000'
-     }),
+    ServiceWorkerModule.register('ngsw-worker.js', {
+      enabled: !isDevMode(),
+      // Register the ServiceWorker as soon as the application is stable
+      // or after 30 seconds (whichever comes first).
+      registrationStrategy: 'registerWhenStable:30000',
+    }),
+
+    // translation
+    TranslateModule.forRoot({
+      defaultLanguage: 'en',
+      loader: {
+        provide: TranslateLoader,
+        useFactory: translateBrowserLoaderFactory,
+        deps: [HttpClient, TransferState],
+      },
+    }),
   ],
   providers: [
     {

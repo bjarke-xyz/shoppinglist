@@ -7,6 +7,11 @@ import { List } from './shoppinglist';
 import { ToastService } from 'src/app/shared/services/toast.service';
 import { Router } from '@angular/router';
 import { Subscription } from 'rxjs';
+import { TranslateService } from '@ngx-translate/core';
+import {
+  LanguageService,
+  Locale,
+} from 'src/app/shared/services/language.service';
 
 @Component({
   selector: 'app-shopping-list',
@@ -16,12 +21,14 @@ import { Subscription } from 'rxjs';
 export class ShoppingListComponent implements OnInit {
   public subscription = Subscription.EMPTY;
   public selectedList = this.shoppinglistService.selectedList;
+
   constructor(
     private authService: AuthService,
     private shoppinglistService: ShoppingListService,
     private bottomSheet: MatBottomSheet,
     private toast: ToastService,
-    private router: Router
+    private router: Router,
+    public languageService: LanguageService
   ) {}
   ngOnInit(): void {
     this.shoppinglistService.getItems().subscribe();
@@ -61,5 +68,9 @@ export class ShoppingListComponent implements OnInit {
     this.shoppinglistService.clearLocalSelectedList();
     this.authService.logout();
     this.router.navigateByUrl('/');
+  }
+
+  public changeLanguage(locale: Locale): void {
+    this.languageService.useLanguage(locale);
   }
 }

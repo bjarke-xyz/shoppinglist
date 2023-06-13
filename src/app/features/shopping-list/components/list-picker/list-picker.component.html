@@ -1,6 +1,6 @@
 <form [formGroup]="form" (submit)="createList()" class="form">
   <mat-form-field>
-    <mat-label>Create new list</mat-label>
+    <mat-label>{{ "NEW_LIST" | translate }}</mat-label>
     <input
       matInput
       formControlName="listName"
@@ -30,7 +30,7 @@
         <mat-menu #menu="matMenu">
           <button mat-menu-item>
             <mat-icon>edit</mat-icon>
-            <span>Rename</span>
+            <span>{{ "RENAME" | translate }}</span>
           </button>
           <button
             mat-menu-item
@@ -38,7 +38,7 @@
             (click)="deleteList(list)"
           >
             <mat-icon>delete_forever</mat-icon>
-            <span>Delete</span>
+            <span>{{ "DELETE" | translate }}</span>
           </button>
         </mat-menu>
       </div>
