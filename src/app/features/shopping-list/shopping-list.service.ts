@@ -1,6 +1,13 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable, effect, signal } from '@angular/core';
-import { Observable, catchError, of, tap, throwError } from 'rxjs';
+import {
+  Observable,
+  catchError,
+  firstValueFrom,
+  of,
+  tap,
+  throwError,
+} from 'rxjs';
 import { environment } from 'src/environments/environment';
 import { AddItemToListResponse, Item, List, ListItem } from './shoppinglist';
 import { AuthService } from '../../core/service/auth.service';
@@ -74,7 +81,7 @@ export class ShoppingListService {
     if (selectedList) {
       this.setLocalSelectedList(selectedList);
       try {
-        this.connectToWebSocket(selectedList);
+        this.connectToWebSocketForList(selectedList);
       } catch (error) {
         console.error('ws failed');
       }
@@ -144,23 +151,14 @@ export class ShoppingListService {
     );
   }
 
-  private connectToWebSocket(list: List): void {
-    const existingWs = this.selectedListWebSocket.get(list.id);
-    if (existingWs) {
-      switch (existingWs.readyState) {
-        case WebSocket.OPEN:
-        case WebSocket.CONNECTING:
-          return;
-        default:
-          this.closeWebSocketConnection(list.id);
-          break;
-      }
+  private connectToWebSocket(
+    list: List,
+    wsInfo: {
+      wsUrl: string;
+      ticket: { token: string };
     }
-    const ws = new WebSocket(
-      `${
-        environment.wsUrl
-      }/api/sse/sse?idToken=${this.authService.getToken()}&listId=${list.id}`
-    );
+  ) {
+    const ws = new WebSocket(`${wsInfo.wsUrl}?token=${wsInfo.ticket.token}`);
     this.selectedListWebSocket.set(list.id, ws);
     ws.addEventListener('error', (event) => {
       console.error('ws error', event);
@@ -232,6 +230,25 @@ export class ShoppingListService {
     });
   }
 
+  private connectToWebSocketForList(list: List): void {
+    const existingWs = this.selectedListWebSocket.get(list.id);
+    if (existingWs) {
+      switch (existingWs.readyState) {
+        case WebSocket.OPEN:
+        case WebSocket.CONNECTING:
+          return;
+        default:
+          this.closeWebSocketConnection(list.id);
+          break;
+      }
+    }
+    this.createWsTicket(list.id).subscribe({
+      next: (wsInfo) => {
+        this.connectToWebSocket(list, wsInfo);
+      },
+    });
+  }
+
   private closeWebSocketConnection(listId?: string): void {
     if (listId) {
       const ws = this.selectedListWebSocket.get(listId);
@@ -245,6 +262,15 @@ export class ShoppingListService {
       }
       this.selectedListWebSocket.clear();
     }
+  }
+
+  private createWsTicket(
+    listId: string
+  ): Observable<{ wsUrl: string; ticket: { token: string } }> {
+    return this.http.post<{ wsUrl: string; ticket: { token: string } }>(
+      `${environment.apiUrl}/api/sse/ws/ticket?listId=${listId}`,
+      null
+    );
   }
 
   private restoreSelectedList(): void {
