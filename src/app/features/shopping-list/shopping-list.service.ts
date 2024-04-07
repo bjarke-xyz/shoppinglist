@@ -27,9 +27,9 @@ export class ShoppingListService {
       if (items === undefined) return;
       const itemIds = new Set(items.map((x) => x.id));
       // console.log('items effect', itemIds.size);
-      this.selectedList.mutate((currentlySelectedList) => {
+      this.selectedList.update((currentlySelectedList) => {
         if (!currentlySelectedList) {
-          return;
+          return currentlySelectedList;
         }
         // console.log('items effect 2', itemIds.size, currentlySelectedList);
         const toRemove = new Set<string>();
@@ -41,6 +41,7 @@ export class ShoppingListService {
         currentlySelectedList.items = currentlySelectedList.items.filter(
           (x) => !toRemove.has(x.itemId)
         );
+        return { ...currentlySelectedList }
       });
     },
     { allowSignalWrites: true }
@@ -111,9 +112,9 @@ export class ShoppingListService {
   createItem(item: CreateItemRequest): Observable<Item> {
     return this.http.post<Item>(`${environment.apiUrl}/api/items`, item).pipe(
       tap((createdItem) => {
-        this.items.mutate((items) => {
-          if (!items) return;
-          items.push(createdItem);
+        this.items.update((items) => {
+          if (!items) return items;
+          return [...items, createdItem];
         });
       })
     );
@@ -124,14 +125,16 @@ export class ShoppingListService {
       .put<Item>(`${environment.apiUrl}/api/items/${id}`, item)
       .pipe(
         tap((updatedItem) => {
-          this.items.mutate((items) => {
-            if (!items) return;
-            const index = items.findIndex((x) => x.id === id);
+          this.items.update((items) => {
+            if (!items) return items;
+            const newItems = [...items]
+            const index = newItems.findIndex((x) => x.id === id);
             if (index === -1) {
-              items.push(updatedItem);
+              newItems.push(updatedItem);
             } else {
-              items[index] = updatedItem;
+              newItems[index] = updatedItem;
             }
+            return newItems
           });
         })
       );
@@ -140,12 +143,14 @@ export class ShoppingListService {
   deleteItem(id: string): Observable<void> {
     return this.http.delete<void>(`${environment.apiUrl}/api/items/${id}`).pipe(
       tap(() => {
-        this.items.mutate((items) => {
-          if (!items) return;
-          const index = items.findIndex((x) => x.id === id);
+        this.items.update((items) => {
+          if (!items) return items;
+          const newItems = [...items]
+          const index = newItems.findIndex((x) => x.id === id);
           if (index !== -1) {
-            items.splice(index, 1);
+            newItems.splice(index, 1);
           }
+          return newItems;
         });
       })
     );
@@ -177,53 +182,63 @@ export class ShoppingListService {
       switch (payload.type) {
         case 'ListItemCrossed': {
           const data = payload.data as ListItemCrossed;
-          this.lists.mutate((lists) => {
-            if (!lists) return;
-            const l = lists.find((x) => x.id === list.id);
-            if (!l) return;
+          this.lists.update((lists) => {
+            if (!lists) return lists;
+            const newLists = [...lists];
+            const l = newLists.find((x) => x.id === list.id);
+            if (!l) return newLists;
             const item = l.items.find((x) => x.itemId === data.itemId);
-            if (!item) return;
+            if (!item) return newLists;
             item.crossed = data.crossed;
+            return newLists;
           });
           break;
         }
         case 'ListItemAdded': {
           const data = payload.data as ListItemAddEvent;
-          this.lists.mutate((lists) => {
-            if (!lists) return;
-            const l = lists.find((x) => x.id === list.id);
-            if (!l) return;
+          this.lists.update((lists) => {
+            if (!lists) return lists;
+            const newLists = [...lists]
+            const l = newLists.find((x) => x.id === list.id);
+            if (!l) return newLists;
             l.items = data.listItems;
+            return newLists;
           });
-          this.items.mutate((items) => {
-            if (!items) return;
-            const itemAlreadyExists = items.some(
+          this.items.update((items) => {
+            if (!items) return items;
+            const newItems = [...items]
+            const itemAlreadyExists = newItems.some(
               (x) => x.id === data.addedItem.id
             );
             if (!itemAlreadyExists) {
-              items.push(data.addedItem);
+              newItems.push(data.addedItem);
             }
+            return newItems;
           });
           break;
         }
         case 'ListItemsRemoved': {
           const data = payload.data as ListItemsRemoved;
-          this.lists.mutate((lists) => {
-            if (!lists) return;
-            const l = lists.find((x) => x.id === list.id);
-            if (!l) return;
+          this.lists.update((lists) => {
+            if (!lists) return lists;
+            const newLists = [...lists]
+            const l = newLists.find((x) => x.id === list.id);
+            if (!l) return newLists;
             l.items = l.items.filter((x) => !data.itemIds.includes(x.itemId));
+            return newLists
           });
           break;
         }
         case 'ItemDeleted': {
           const data = payload.data as ItemDeletedEvent;
-          this.items.mutate((items) => {
-            if (!items) return;
-            const index = items.findIndex((x) => x.id === data.itemId);
+          this.items.update((items) => {
+            if (!items) return items;
+            const newItems = [...items]
+            const index = newItems.findIndex((x) => x.id === data.itemId);
             if (index !== -1) {
-              items.splice(index, 1);
+              newItems.splice(index, 1);
             }
+            return newItems;
           });
         }
       }
@@ -312,9 +327,9 @@ export class ShoppingListService {
   createList(req: CreateListRequest) {
     return this.http.post<List>(`${environment.apiUrl}/api/lists`, req).pipe(
       tap((list) => {
-        this.lists.mutate((lists) => {
-          if (lists === undefined) return;
-          lists.push(list);
+        this.lists.update((lists) => {
+          if (lists === undefined) return lists;
+          return [...lists, list];
         });
       })
     );
@@ -325,14 +340,16 @@ export class ShoppingListService {
       .put<List>(`${environment.apiUrl}/api/list/${listId}`, req)
       .pipe(
         tap((updatedList) => {
-          this.lists.mutate((lists) => {
-            if (lists === undefined) return;
-            const index = lists.findIndex((x) => x.id === listId);
+          this.lists.update((lists) => {
+            if (lists === undefined) return lists;
+            const newLists = [...lists];
+            const index = newLists.findIndex((x) => x.id === listId);
             if (index === -1) {
-              lists.push(updatedList);
+              newLists.push(updatedList);
             } else {
-              lists[index] = updatedList;
+              newLists[index] = updatedList;
             }
+            return newLists;
           });
         })
       );
@@ -343,12 +360,14 @@ export class ShoppingListService {
       .delete<void>(`${environment.apiUrl}/api/lists/${listId}`)
       .pipe(
         tap(() => {
-          this.lists.mutate((lists) => {
-            if (lists === undefined) return;
-            const index = lists.findIndex((x) => x.id === listId);
+          this.lists.update((lists) => {
+            if (lists === undefined) return lists;
+            const newLists = [...lists]
+            const index = newLists.findIndex((x) => x.id === listId);
             if (index !== -1) {
-              lists.splice(index, 1);
+              newLists.splice(index, 1);
             }
+            return newLists;
           });
         })
       );
@@ -366,18 +385,22 @@ export class ShoppingListService {
       )
       .pipe(
         tap(({ listItems, addedItem }) => {
-          this.selectedList.mutate((list) => {
+          this.selectedList.update((list) => {
             if (!list) {
-              return;
+              return list;
             }
-            list.items = listItems;
+            const newList = { ...list }
+            newList.items = listItems;
+            return newList;
           });
-          this.items.mutate((items) => {
-            if (!items) return;
-            const itemAlreadyExists = items.some((x) => x.id === addedItem.id);
+          this.items.update((items) => {
+            if (!items) return items;
+            const newItems = [...items]
+            const itemAlreadyExists = newItems.some((x) => x.id === addedItem.id);
             if (!itemAlreadyExists) {
-              items.push(addedItem);
+              newItems.push(addedItem);
             }
+            return newItems;
           });
         })
       );
@@ -395,9 +418,11 @@ export class ShoppingListService {
       )
       .pipe(
         tap(() => {
-          this.selectedList.mutate((list) => {
-            if (!list) return;
-            list.items = list.items.filter((x) => !itemIds.includes(x.itemId));
+          this.selectedList.update((list) => {
+            if (!list) return list;
+            const newList = { ...list }
+            newList.items = newList.items.filter((x) => !itemIds.includes(x.itemId));
+            return newList
           });
         })
       );
@@ -415,13 +440,15 @@ export class ShoppingListService {
       )
       .pipe(
         tap(() => {
-          this.selectedList.mutate((list) => {
-            if (!list) return;
-            for (const listItem of list.items) {
+          this.selectedList.update((list) => {
+            if (!list) return list;
+            const newList = { ...list }
+            for (const listItem of newList.items) {
               if (listItem.itemId === itemId) {
                 listItem.crossed = crossed;
               }
             }
+            return newList;
           });
         })
       );

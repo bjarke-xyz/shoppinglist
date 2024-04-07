@@ -7,7 +7,7 @@ import { MatSnackBarConfig } from '@angular/material/snack-bar';
 export class ToastService {
   public notifications = signal<ToastPayload[]>([]);
 
-  constructor() {}
+  constructor() { }
 
   public error(error: any): void {
     const defaultConfig: MatSnackBarConfig = {
@@ -16,21 +16,15 @@ export class ToastService {
     };
     console.error(error);
     if (typeof error === 'string') {
-      this.notifications.mutate((toasts) => {
-        toasts.push({
-          message: error,
-          config: defaultConfig,
-        });
+      this.notifications.update((toasts) => {
+        return [...toasts, { message: error, config: defaultConfig }];
       });
     } else {
       if (error?.error?.error?.name === 'ZodError') {
         const issues = error.error.error.issues as { message: string }[];
         const issuesStr = issues.map((x) => x.message).join('\n');
-        this.notifications.mutate((toasts) => {
-          toasts.push({
-            message: issuesStr,
-            config: defaultConfig,
-          });
+        this.notifications.update((toasts) => {
+          return [...toasts, { message: issuesStr, config: defaultConfig }]
         });
       } else {
         const errorMsg =
@@ -39,11 +33,8 @@ export class ToastService {
           error?.error ??
           error?.message ??
           'An error occured';
-        this.notifications.mutate((toasts) => {
-          toasts.push({
-            message: errorMsg,
-            config: defaultConfig,
-          });
+        this.notifications.update((toasts) => {
+          return [...toasts, { message: errorMsg, config: defaultConfig }]
         });
       }
     }
@@ -54,11 +45,8 @@ export class ToastService {
       duration: duration,
       panelClass: ['mat-toolbar', 'mat-primary'],
     };
-    this.notifications.mutate((toasts) => {
-      toasts.push({
-        message: text,
-        config: defaultConfig,
-      });
+    this.notifications.update((toasts) => {
+      return [...toasts, { message: text, config: defaultConfig }]
     });
   }
 }

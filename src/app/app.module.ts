@@ -13,7 +13,7 @@ import {
 import { ServiceWorkerModule } from '@angular/service-worker';
 import { TranslateLoader, TranslateModule } from '@ngx-translate/core';
 import { translateBrowserLoaderFactory } from './core/utils/translate-browser.loader';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, provideHttpClient, withFetch } from '@angular/common/http';
 const globalRippleConfig: RippleGlobalOptions = {
   disabled: true,
 };
@@ -52,7 +52,8 @@ const globalRippleConfig: RippleGlobalOptions = {
       provide: MAT_RIPPLE_GLOBAL_OPTIONS,
       useValue: globalRippleConfig,
     },
+    provideHttpClient(withFetch())
   ],
   bootstrap: [AppComponent],
 })
-export class AppModule {}
+export class AppModule { }

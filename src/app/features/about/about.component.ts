@@ -18,8 +18,8 @@ export class AboutComponent {
     });
     this.eventSource.addEventListener('message', (event) => {
       console.log(event);
-      this.events.mutate((events) => {
-        events.push(event.data);
+      this.events.update((events) => {
+        return [...events, event.data]
       });
     });
     this.eventSource.addEventListener('error', (event) => {
