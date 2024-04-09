@@ -30,7 +30,7 @@
     "@angular/ssr": "^17.3.3",
     "@ngx-translate/core": "^15.0.0",
     "@ngx-translate/http-loader": "^8.0.0",
-    "express": "^4.15.2",
+    "express": "^4.19.2",
     "jwt-decode": "^3.1.2",
     "lodash-es": "^4.17.21",
     "nanoid": "^4.0.2",
